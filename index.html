@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0A0A" />
+<title>SecureInf AI</title>
+<meta name="description" content="SecureInf AI — Konuşmaların sende kalsın. Yerel, güvenli, iz bırakmaz." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 3 6 10v12c0 11 7.6 19.4 18 23 10.4-3.6 18-12 18-23V10L24 3z' fill='%230A0A0A' stroke='%2300FF88' stroke-width='3'/%3E%3Crect x='13' y='17' width='22' height='12' rx='3' fill='%2300FF88'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: 'var(--bg)', panel: 'var(--panel)', panel2: 'var(--panel2)', line: 'var(--line)',
+          ink: 'var(--ink)', mute: 'var(--mute)', neon: 'var(--neon)', soft: 'var(--soft)', onneon: 'var(--onneon)',
+          danger: 'var(--danger)'
+        },
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+        }
+      }
+    }
+  };
+</script>
+
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0A0A0A; --panel: #111413; --panel2: #181c1a; --line: #25302b;
+    --ink: #E6F2EC; --mute: #7f9188; --neon: #00FF88; --soft: rgba(0,255,136,.10);
+    --onneon: #04130c; --danger: #ff4d6d; --glass: rgba(10,12,11,.78);
+    --glow: 0 0 24px rgba(0,255,136,.22); color-scheme: dark;
+  }
+  [data-theme="light"] {
+    --bg: #F2F6F4; --panel: #FFFFFF; --panel2: #E9F0EC; --line: #D2DED7;
+    --ink: #0E1A15; --mute: #5b6e65; --neon: #00935a; --soft: rgba(0,147,90,.10);
+    --onneon: #FFFFFF; --danger: #d6264a; --glass: rgba(255,255,255,.82);
+    --glow: 0 0 20px rgba(0,147,90,.15); color-scheme: light;
+  }
+  html, body, #root { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  ::selection { background: var(--neon); color: var(--onneon); }
+  .glass { background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .glow { box-shadow: var(--glow); }
+  .scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+  .scroll::-webkit-scrollbar-thumb:hover { background: var(--neon); }
+  .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--neon); display: inline-block; animation: bounce 1.1s infinite ease-in-out; }
+  .dot:nth-child(2) { animation-delay: .15s; } .dot:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity: .35; } 40% { transform: translateY(-5px); opacity: 1; } }
+  @keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+  @keyframes indet { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+  @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+  @keyframes pulseRing { 0% { box-shadow: 0 0 0 0 rgba(0,255,136,.45); } 100% { box-shadow: 0 0 0 12px rgba(0,255,136,0); } }
+  .scanbar { position: relative; overflow: hidden; height: 4px; border-radius: 99px; background: var(--line); }
+  .scanbar > i { position: absolute; inset: 0 auto 0 0; width: 30%; background: linear-gradient(90deg, transparent, var(--neon), transparent); animation: scan 1.3s infinite linear; }
+  .indet { position: relative; overflow: hidden; height: 3px; border-radius: 99px; background: var(--line); }
+  .indet > i { position: absolute; inset: 0 auto 0 0; width: 38%; background: var(--neon); border-radius: 99px; animation: indet 1.4s infinite ease-in-out; }
+  .cursor { display: inline-block; width: .55em; height: 1.05em; background: var(--neon); vertical-align: -2px; margin-left: 2px; animation: blink 1s infinite; }
+  .pulse-ring { animation: pulseRing 1.8s infinite; }
+  textarea { font-family: inherit; }
+  .msg-action { border:1px solid var(--line); background:var(--panel); color:var(--mute); border-radius:9px; padding:5px 8px; font-size:11px; }
+  .msg-action:hover { color:var(--neon); border-color:var(--neon); }
+  .sidebar-input { width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 10px; outline:none; font-size:12px; color:var(--ink); }
+  .sidebar-input:focus { border-color:var(--neon); }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001s !important; } }
+</style>
+
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/framer-motion@10.18.0/dist/framer-motion.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback, forwardRef, Fragment } = React;
+
+/* ------------------------------------------------------------------ *
+ *  Framer Motion (with a graceful no-animation fallback if CDN fails)
+ * ------------------------------------------------------------------ */
+const FM = window.Motion || window.FramerMotion || {};
+const MOTION_PROPS = ['initial','animate','exit','transition','whileHover','whileTap','whileFocus','variants','layout','layoutId','drag'];
+const _cache = {};
+const motion = FM.motion || new Proxy({}, {
+  get: (_, tag) => _cache[tag] || (_cache[tag] = forwardRef((props, ref) => {
+    const p = { ...props };
+    MOTION_PROPS.forEach(k => delete p[k]);
+    return React.createElement(tag, { ...p, ref });
+  }))
+});
+const AnimatePresence = FM.AnimatePresence || (({ children }) => React.createElement(Fragment, null, children));
+
+/* ------------------------------------------------------------------ *
+ *  callAI — PLACEHOLDER. Replace the body with your real endpoint.
+ *  ctx = { system, history: [{role, content}], model, user }
+ *  Must return a string (the assistant reply).
+ *
+ *  Example (Pollinations, no key needed — all tiers share ONE real model):
+ *
+ *  async function callAI(prompt, ctx) {
+ *    const res = await fetch('https://text.pollinations.ai/openai', {
+ *      method: 'POST',
+ *      headers: { 'Content-Type': 'application/json' },
+ *      body: JSON.stringify({
+ *        model: 'openai-large', // or route to openai/gpt-oss-20b via your Groq proxy
+ *        messages: [{ role: 'system', content: ctx.system }, ...ctx.history, { role: 'user', content: prompt }]
+ *      })
+ *    });
+ *    const data = await res.json();
+ *    return data.choices[0].message.content;
+ *  }
+ *
+ *  For Groq: call it from YOUR OWN proxy so the API key is never exposed in the browser.
+ * ------------------------------------------------------------------ */
+const GROQ_KEY = "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"; // <-- API anahtarı burada
+const GROQ_MODEL = "openai/gpt-oss-20b";
+
+async function callAI(prompt, ctx = {}) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_KEY },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      stream: true,
+      messages: [
+        { role: 'system', content: ctx.system || '' },
+        ...(ctx.history || []),
+        { role: 'user', content: prompt }
+      ]
+    }),
+    signal: ctx.signal
+  });
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json()).error?.message || ''; } catch {}
+    throw new Error('API hatası: ' + res.status + (detail ? ' · ' + detail : ''));
+  }
+  if (!res.body) throw new Error('Tarayıcı streaming yanıtını desteklemiyor.');
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '', full = '';
+  try {
+    while (true) {
+      if (ctx.signal?.aborted) throw new DOMException('İstek durduruldu', 'AbortError');
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (payload === '[DONE]') continue;
+        try {
+          const data = JSON.parse(payload);
+          if (data.error) throw new Error(data.error.message || 'Groq API hatası');
+          const piece = data.choices?.[0]?.delta?.content;
+          if (piece) {
+            full += piece;
+            if (ctx.onChunk) ctx.onChunk(full);
+          }
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          throw e;
+        }
+      }
+    }
+  } finally {
+    try { reader.releaseLock(); } catch {}
+  }
+  return full;
+}
+
+async function generateChatTitle(firstMessage, ctx = {}) {
+  try {
+    const title = await callAI(
+      'Aşağıdaki kullanıcı mesajı için 3-6 kelimelik, kısa ve açıklayıcı bir sohbet başlığı üret. Tırnak, açıklama veya noktalama ekleme. Mesaj: ' + firstMessage,
+      { ...ctx, history: [], system: 'Yalnızca kısa sohbet başlığı üret. Kullanıcının dilini koru.' }
+    );
+    return title.trim().replace(/^["'“”]+|["'“”]+$/g, '').replace(/\s+/g, ' ').slice(0, 70) || firstMessage.slice(0, 38);
+  } catch {
+    return firstMessage.length > 38 ? firstMessage.slice(0, 38) + '…' : firstMessage;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Config: 6 fake tiers (same backend, different UI/limits/prompts)
+ * ------------------------------------------------------------------ */
+const MODELS = [
+  { id: 'super-fast', name: 'SI Super Fast', short: 'Super Fast', icon: '⚡', tag: 'Gündelik · en hızlı', limit: 100, delay: 80,   step: 8, tick: 10, anim: 'basic',
+    prompt: 'Çok kısa, hızlı, gündelik cevap ver. En fazla 2-3 cümle kur.' },
+  { id: 'fast',       name: 'SI Fast',       short: 'Fast',       icon: '🚀', tag: 'Hızlı · kısa net',  limit: 80,  delay: 350,  step: 6, tick: 12, anim: 'basic',
+    prompt: 'Kısa ve net cevap ver. Gereksiz uzatma, doğrudan konuya gir.' },
+  { id: 'standard',   name: 'SI Standart',   short: 'Standart',   icon: '🛡️', tag: 'Dengeli',           limit: 70,  delay: 700,  step: 4, tick: 14, anim: 'basic',
+    prompt: 'Dengeli, anlaşılır ve yeterince açıklayıcı cevap ver. Gerekirse kısa örnek ekle.' },
+  { id: 'deep',       name: 'SI Deep Chat',  short: 'Deep Chat',  icon: '🧠', tag: 'Derin analiz',      limit: 50,  delay: 1300, step: 3, tick: 16, anim: 'deep',
+    prompt: 'Konuyu derinlemesine analiz et. Adım adım düşün, nedenleri açıkla, örnekler ve kod ekle.' },
+  { id: 'premium',    name: 'SI Premium',    short: 'Premium',    icon: '💎', tag: 'Kalkan taramalı',   limit: 30,  delay: 2200, step: 3, tick: 18, anim: 'shield',
+    prompt: 'Çok detaylı, yapılandırılmış ve profesyonel cevap ver. Başlıklar, maddeler, kod örnekleri ve güvenlik notları kullan.' },
+  { id: 'pro-max',    name: 'SI Premium Pro Max', short: 'Pro Max', icon: '👑', tag: 'En zeki · en derin', limit: 3, delay: 4000, step: 2, tick: 20, anim: 'max',
+    prompt: 'En derin ve en zeki modsun. Konuyu çok katmanlı analiz et: önce kısa özet, sonra detaylı açıklama, alternatif yaklaşımlar, riskler, en iyi pratikler, kod örnekleri ve bir sonraki adım önerileri ver. Kaynak/terminoloji doğruluğuna özen göster, tutarlı ve eksiksiz ol.' }
+];
+const PRO_MAX_STATS = ['12,847 token analiz edildi', 'Quantum Encrypted', '%99.9 kalite'];
+
+const BASE_PROMPT = "You are SecureInf AI, a helpful, slightly hacker-minded AI assistant. You are secure, you don't log data, you help with coding, OSINT, ethical hacking learning, cybersecurity, Linux, Python, network analysis. You NEVER help with illegal hacking, but you teach ethical hacking, bug bounty, CTF. You are friendly, you address user by their name {name}. You are created by SecureInf team. Keep answers in Turkish unless user speaks English. Add small secure/hacker flavor.";
+
+function buildSystem(user, model) {
+  const base = BASE_PROMPT.replace('{name}', user.name);
+  const tone = user.age < 18
+    ? `Kullanıcı ${user.age} yaşında (18 yaşından küçük). Daha samimi, sıcak ve cesaretlendirici konuş; sade anlat, uygun yerlerde emoji kullan. Yasal ve etik sınırları özellikle vurgula, riskli konulara girme.`
+    : `Kullanıcı ${user.age} yaşında (yetişkin). Daha profesyonel, teknik ve hafif hacker üslubuyla konuş; terminal esintisi ekleyebilirsin.`;
+  return [base, tone, `Aktif katman: ${model.name}. ${model.prompt}`].join('\n\n');
+}
+
+/* ------------------------------------------------------------------ *
+ *  localStorage helpers
+ * ------------------------------------------------------------------ */
+const K = { user: 'secureinf.user', chats: 'secureinf.chats', usage: 'secureinf.usage', theme: 'secureinf.theme', active: 'secureinf.active', model: 'secureinf.model' };
+const load = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const getUsage = () => {
+  const u = load(K.usage, null);
+  if (!u || u.date !== todayKey()) { const fresh = { date: todayKey(), counts: {} }; save(K.usage, fresh); return fresh; }
+  return u;
+};
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const randHex = () => Array.from({ length: 6 }, () => Math.floor(Math.random() * 65535).toString(16).padStart(4, '0')).join(' ');
+
+/* ------------------------------------------------------------------ *
+ *  Icons
+ * ------------------------------------------------------------------ */
+const Icon = ({ d, size = 20, children, ...p }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+    {d ? [].concat(d).map((x, i) => <path key={i} d={x} />) : children}
+  </svg>
+);
+const I = {
+  menu: p => <Icon d={["M4 6h16", "M4 12h16", "M4 18h16"]} {...p} />,
+  plus: p => <Icon d={["M12 5v14", "M5 12h14"]} {...p} />,
+  send: p => <Icon d={["M22 2 11 13", "M22 2 15 22l-4-9-9-4 20-7z"]} {...p} />,
+  trash: p => <Icon d={["M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6", "M10 11v6", "M14 11v6"]} {...p} />,
+  chevron: p => <Icon d="M6 9l6 6 6-6" {...p} />,
+  back: p => <Icon d="M15 6l-6 6 6 6" {...p} />,
+  x: p => <Icon d={["M6 6l12 12", "M18 6L6 18"]} {...p} />,
+  copy: p => <Icon d={["M9 9h11v11H9z", "M5 15H4V4h11v1"]} {...p} />,
+  download: p => <Icon d={["M12 3v12", "M7 10l5 5 5-5", "M5 21h14"]} {...p} />,
+  lock: p => <Icon d={["M6 11h12v9H6z", "M8 11V8a4 4 0 0 1 8 0v3"]} {...p} />,
+  gear: p => (
+    <Icon {...p}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </Icon>
+  )
+};
+
+const Logo = ({ size = 32 }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-label="SecureInf logo" style={{ color: 'var(--neon)' }}>
+    <path d="M24 3 6 10v12c0 11 7.6 19.4 18 23 10.4-3.6 18-12 18-23V10L24 3z" stroke="currentColor" strokeWidth="2.6" strokeLinejoin="round" fill="currentColor" fillOpacity=".08" />
+    <path d="M15 16h18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H25l-5 4v-4h-5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="currentColor" fillOpacity=".18" />
+    <circle cx="19.5" cy="22.5" r="1.5" fill="currentColor" /><circle cx="24" cy="22.5" r="1.5" fill="currentColor" /><circle cx="28.5" cy="22.5" r="1.5" fill="currentColor" />
+  </svg>
+);
+
+/* ------------------------------------------------------------------ *
+ *  Matrix background (subtle)
+ * ------------------------------------------------------------------ */
+function MatrixBg({ theme }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext('2d');
+    const size = 16; let w, h, cols, drops;
+    const chars = '01アイウエオカキクケコサシスセソタチツテト<>/{}$#%&=+'.split('');
+    const light = theme === 'light';
+    const resize = () => {
+      w = c.width = window.innerWidth; h = c.height = window.innerHeight;
+      cols = Math.ceil(w / size);
+      drops = Array.from({ length: cols }, () => Math.floor(Math.random() * -40));
+    };
+    resize(); window.addEventListener('resize', resize);
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const id = reduce ? null : setInterval(() => {
+      ctx.fillStyle = light ? 'rgba(242,246,244,0.12)' : 'rgba(10,10,10,0.10)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = light ? '#00935a' : '#00ff88';
+      ctx.font = size + 'px monospace';
+      for (let i = 0; i < cols; i++) {
+        if (drops[i] > 0) ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * size, drops[i] * size);
+        if (drops[i] * size > h && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }, 70);
+    return () => { if (id) clearInterval(id); window.removeEventListener('resize', resize); };
+  }, [theme]);
+  return <canvas ref={ref} className="fixed inset-0 z-0 pointer-events-none" style={{ opacity: theme === 'light' ? 0.06 : 0.12 }} />;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Mini markdown renderer (safe: no innerHTML)
+ * ------------------------------------------------------------------ */
+function renderInline(text) {
+  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) => {
+    if (p.length > 2 && p.startsWith('`') && p.endsWith('`')) return <code key={i} className="font-mono text-[0.86em] px-1.5 py-0.5 rounded bg-soft text-neon border border-line">{p.slice(1, -1)}</code>;
+    if (p.length > 4 && p.startsWith('**') && p.endsWith('**')) return <strong key={i} className="font-semibold text-ink">{p.slice(2, -2)}</strong>;
+    return <Fragment key={i}>{p}</Fragment>;
+  });
+}
+
+function TextBlock({ seg }) {
+  const out = []; let list = null; let para = [];
+  const flushPara = () => { if (para.length) { out.push(<p key={out.length} className="my-1.5 leading-relaxed whitespace-pre-line">{renderInline(para.join('\n'))}</p>); para = []; } };
+  const flushList = () => {
+    if (list) {
+      const Tag = list.ordered ? 'ol' : 'ul';
+      out.push(<Tag key={out.length} className={(list.ordered ? 'list-decimal' : 'list-disc') + ' pl-5 my-1.5 space-y-1 marker:text-neon'}>{list.items.map((it, i) => <li key={i} className="leading-relaxed">{renderInline(it)}</li>)}</Tag>);
+      list = null;
+    }
+  };
+  for (const raw of seg.split('\n')) {
+    const line = raw.trimEnd(); let m;
+    if (!line.trim()) { flushPara(); flushList(); continue; }
+    if ((m = line.match(/^(#{1,4})\s+(.*)/))) { flushPara(); flushList(); out.push(<div key={out.length} className="font-semibold text-neon mt-3 mb-1">{renderInline(m[2])}</div>); continue; }
+    if ((m = line.match(/^\s*[-*•]\s+(.*)/))) { flushPara(); if (!list || list.ordered) { flushList(); list = { ordered: false, items: [] }; } list.items.push(m[1]); continue; }
+    if ((m = line.match(/^\s*\d+[.)]\s+(.*)/))) { flushPara(); if (!list || !list.ordered) { flushList(); list = { ordered: true, items: [] }; } list.items.push(m[1]); continue; }
+    flushList(); para.push(line);
+  }
+  flushPara(); flushList();
+  return <>{out}</>;
+}
+
+function CodeBlock({ lang, code }) {
+  const [ok, setOk] = useState(false);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(code); setOk(true); setTimeout(() => setOk(false), 1400); } catch {}
+  };
+  return (
+    <div className="my-2 rounded-xl overflow-hidden border border-line" style={{ background: '#050807' }}>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-line text-[11px] font-mono" style={{ background: '#0b100e', color: '#7f9188' }}>
+        <span className="uppercase tracking-wider">{lang || 'terminal'}</span>
+        <button onClick={e => { e.stopPropagation(); copy(); }} className="flex items-center gap-1 hover:text-neon transition-colors">
+          <I.copy size={13} /> {ok ? 'kopyalandı' : 'kopyala'}
+        </button>
+      </div>
+      <pre className="scroll overflow-x-auto p-3 text-[13px] leading-relaxed font-mono m-0" style={{ color: '#9dffd0' }}><code>{code.replace(/\n$/, '')}</code></pre>
+    </div>
+  );
+}
+
+function Markdown({ text }) {
+  const segs = text.split('```');
+  return (
+    <div className="text-[15px]">
+      {segs.map((seg, i) => {
+        if (i % 2 === 1) {
+          const nl = seg.indexOf('\n');
+          const lang = nl >= 0 ? seg.slice(0, nl).trim() : '';
+          const code = nl >= 0 ? seg.slice(nl + 1) : seg;
+          return <CodeBlock key={i} lang={lang} code={code} />;
+        }
+        return <TextBlock key={i} seg={seg} />;
+      })}
+    </div>
+  );
+}
+
+/* Typewriter reveal */
+function TypeText({ text, model, onDone, onTick }) {
+  const [n, setN] = useState(0);
+  const step = Math.max(model.step, Math.ceil(text.length / (9000 / model.tick)));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setN(v => {
+        const nv = Math.min(text.length, v + step);
+        if (nv >= text.length) { clearInterval(id); setTimeout(onDone, 0); }
+        return nv;
+      });
+      onTick && onTick();
+    }, model.tick);
+    return () => clearInterval(id);
+  }, [text]);
+  return <><Markdown text={text.slice(0, n)} />{n < text.length && <span className="cursor" />}</>;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Thinking indicator (tier specific)
+ * ------------------------------------------------------------------ */
+function Thinking({ model }) {
+  const [i, setI] = useState(0);
+  const [hex, setHex] = useState(randHex());
+  useEffect(() => {
+    const a = setInterval(() => setI(x => x + 1), 1000);
+    const b = (model.anim === 'shield' || model.anim === 'max') ? setInterval(() => setHex(randHex()), 90) : null;
+    return () => { clearInterval(a); if (b) clearInterval(b); };
+  }, [model.id]);
+  const steps = ['Şifreli kanal kuruluyor', 'Bağlam çözümleniyor', 'Tehdit yüzeyi taranıyor', 'Yanıt sentezleniyor', 'Kalite doğrulanıyor'];
+  return (
+    <div className="flex gap-3 items-start">
+      <div className="shrink-0 w-8 h-8 rounded-full bg-panel border border-line flex items-center justify-center pulse-ring"><Logo size={20} /></div>
+      <div className="rounded-2xl rounded-tl-sm bg-panel border border-line px-4 py-3 min-w-[210px] max-w-[88%]">
+        <div className="flex items-center gap-2 text-sm font-mono text-neon">
+          <span>SecureInf düşünüyor...</span>
+          <span className="flex gap-1 items-center"><i className="dot" /><i className="dot" /><i className="dot" /></span>
+        </div>
+        {(model.anim === 'deep' || model.anim === 'max') && (
+          <div className="mt-2.5 space-y-1.5">
+            <div className="text-xs text-mute font-mono">🧠 derin analiz ediliyor</div>
+            <div className="indet"><i /></div>
+          </div>
+        )}
+        {(model.anim === 'shield' || model.anim === 'max') && (
+          <div className="mt-2.5 space-y-1.5">
+            <div className="text-xs text-neon font-mono">🛡️ SecureInf kalkanı tarıyor...</div>
+            <div className="scanbar"><i /></div>
+            <div className="text-[10px] font-mono text-mute tracking-wider overflow-hidden whitespace-nowrap text-ellipsis">{hex}</div>
+          </div>
+        )}
+        {model.anim === 'max' && (
+          <div className="mt-2 text-[11px] font-mono text-mute">› {steps[i % steps.length]}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Onboarding modal (cannot be skipped)
+ * ------------------------------------------------------------------ */
+function Onboarding({ onDone }) {
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [err, setErr] = useState('');
+  const submit = e => {
+    e.preventDefault();
+    const n = name.trim(); const a = parseInt(age, 10);
+    if (n.length < 1 || n.length > 30) return setErr('Lütfen adını gir (en fazla 30 karakter).');
+    if (!a || a < 5 || a > 120) return setErr('Lütfen geçerli bir yaş gir (5–120).');
+    onDone({ name: n, age: a });
+  };
+  return (
+    <motion.div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(8px)' }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.form onSubmit={submit} role="dialog" aria-modal="true" aria-label="Hoş geldin"
+        className="w-full max-w-md rounded-3xl bg-panel border border-line p-6 sm:p-8 glow my-auto"
+        initial={{ y: 30, scale: .96, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 22 }}>
+        <div className="flex flex-col items-center text-center">
+          <motion.div animate={{ rotate: [0, -4, 4, 0] }} transition={{ duration: 4, repeat: Infinity }}><Logo size={64} /></motion.div>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight">SecureInf'a Hoş Geldin</h1>
+          <p className="mt-1 text-sm text-neon font-mono">Konuşmaların sende kalsın.</p>
+        </div>
+        <div className="mt-6 space-y-4">
+          <label className="block">
+            <span className="text-xs font-mono text-mute uppercase tracking-wider">Adın nedir?</span>
+            <input autoFocus value={name} onChange={e => { setName(e.target.value); setErr(''); }} maxLength={30} placeholder="örn. Ayşe"
+              className="mt-1.5 w-full rounded-xl bg-bg border border-line px-4 py-3 text-base outline-none focus:border-neon focus:ring-2 focus:ring-[color:var(--soft)] transition" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-mono text-mute uppercase tracking-wider">Yaşın kaç?</span>
+            <input value={age} onChange={e => { setAge(e.target.value.replace(/\D/g, '').slice(0, 3)); setErr(''); }} inputMode="numeric" placeholder="örn. 21"
+              className="mt-1.5 w-full rounded-xl bg-bg border border-line px-4 py-3 text-base outline-none focus:border-neon focus:ring-2 focus:ring-[color:var(--soft)] transition" />
+          </label>
+          <div className="rounded-xl border border-line bg-soft px-4 py-3 text-[13px] leading-relaxed">
+            ⚠️ Tüm verilerin sadece bu cihazda, tarayıcında saklanır. Sunucuya gitmez. Temizlersen silinir.
+          </div>
+          <AnimatePresence>
+            {err && <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-sm text-danger font-mono">✖ {err}</motion.div>}
+          </AnimatePresence>
+          <motion.button type="submit" whileTap={{ scale: .97 }} whileHover={{ scale: 1.02 }}
+            className="w-full rounded-xl bg-neon text-onneon font-bold py-3.5 text-base glow">
+            Sisteme Gir →
+          </motion.button>
+        </div>
+      </motion.form>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Empty state: hacker terminal
+ * ------------------------------------------------------------------ */
+function Terminal({ name, onPick }) {
+  const lines = useMemo(() => [
+    '$ secureinf --init --no-logs',
+    '[ ok ] yerel depolama bağlandı',
+    '[ ok ] sunucu bağlantısı: YOK',
+    '[ ok ] iz bırakma: 0 byte',
+    `> Sistem hazır, ${name}. Ne tarayalım bugün?`
+  ], [name]);
+  const full = lines.join('\n');
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    setIdx(0);
+    const id = setInterval(() => setIdx(v => { if (v >= full.length) { clearInterval(id); return v; } return v + 1; }), 24);
+    return () => clearInterval(id);
+  }, [full]);
+  const shown = full.slice(0, idx).split('\n');
+  const suggestions = ['Nmap ile temel port taraması nasıl yapılır?', 'CTF\'e nereden başlamalıyım?', 'Linux dosya izinlerini (chmod) açıkla', 'Python ile dosya hash hesaplayıcı yaz'];
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-4 py-8">
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-xl">
+        <div className="rounded-2xl overflow-hidden border border-line glow" style={{ background: '#050807' }}>
+          <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-line" style={{ background: '#0b100e' }}>
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: '#ff5f57' }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: '#febc2e' }} /><span className="w-2.5 h-2.5 rounded-full" style={{ background: '#28c840' }} />
+            <span className="ml-3 text-[11px] font-mono" style={{ color: '#7f9188' }}>secureinf@local:~</span>
+          </div>
+          <div className="p-4 sm:p-5 font-mono text-[13px] sm:text-sm leading-relaxed min-h-[150px]" style={{ color: '#7fcfa6' }}>
+            {shown.map((l, i) => (
+              <div key={i} style={i === lines.length - 1 ? { color: '#00FF88', fontWeight: 700, marginTop: 6 } : undefined}>
+                {l}{i === shown.length - 1 && <span className="cursor" />}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-center mt-4 text-sm text-mute font-mono">Konuşmaların sende kalsın. Yerel, güvenli, iz bırakmaz.</p>
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {suggestions.map((s, i) => (
+            <motion.button key={s} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 + i * 0.08 }}
+              whileHover={{ y: -2 }} whileTap={{ scale: .98 }} onClick={() => onPick(s)}
+              className="text-left text-[13px] rounded-xl border border-line bg-panel hover:border-neon px-3.5 py-3 transition-colors">
+              <span className="text-neon font-mono mr-1.5">›</span>{s}
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Model picker (top bar)
+ * ------------------------------------------------------------------ */
+function ModelPicker({ modelId, setModelId, usage }) {
+  const [open, setOpen] = useState(false);
+  const cur = MODELS.find(m => m.id === modelId) || MODELS[2];
+  const left = m => Math.max(0, m.limit - (usage.counts[m.id] || 0));
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)} aria-haspopup="listbox" aria-expanded={open}
+        className="flex items-center gap-2 rounded-xl border border-line bg-panel hover:border-neon px-3 py-2 text-sm transition-colors">
+        <span>{cur.icon}</span>
+        <span className="font-semibold hidden sm:inline">{cur.name}</span>
+        <span className="font-semibold sm:hidden">{cur.short}</span>
+        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-soft text-neon">{left(cur)}/{cur.limit}</span>
+        <I.chevron size={16} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: '.2s' }} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <motion.div role="listbox" initial={{ opacity: 0, y: -8, scale: .97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: .16 }}
+              className="absolute right-0 mt-2 z-50 w-[min(92vw,370px)] rounded-2xl border border-line bg-panel p-2 glow">
+              <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-widest text-mute">SecureInf modelleri · günlük kalan</div>
+              {MODELS.map(m => {
+                const l = left(m); const pct = (l / m.limit) * 100; const active = m.id === modelId;
+                return (
+                  <button key={m.id} role="option" aria-selected={active} onClick={() => { setModelId(m.id); setOpen(false); }}
+                    className={'w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-3 transition-colors hover:bg-panel2 ' + (active ? 'bg-soft' : '')}>
+                    <span className="text-xl w-7 text-center">{m.icon}</span>
+                    <span className="flex-1 min-w-0">
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-sm truncate">{m.name}</span>
+                        <span className={'font-mono text-xs ' + (l === 0 ? 'text-danger' : 'text-neon')}>{l === 0 ? 'limit doldu' : `${l}/${m.limit}`}</span>
+                      </span>
+                      <span className="flex items-center justify-between text-[11px] text-mute mt-0.5"><span>{m.tag}</span><span className="font-mono">{m.delay}ms</span></span>
+                      <span className="block mt-1.5 h-1 rounded-full bg-line overflow-hidden"><span className="block h-full rounded-full" style={{ width: pct + '%', background: l === 0 ? 'var(--danger)' : 'var(--neon)', transition: 'width .4s' }} /></span>
+                    </span>
+                  </button>
+                );
+              })}
+              <div className="px-2.5 py-2 text-[11px] text-mute">Limitler her gün gece yarısı sıfırlanır.</div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Settings page
+ * ------------------------------------------------------------------ */
+function Settings({ user, setUser, theme, setTheme, usage, chats, onExport, onClear, onClose, notify }) {
+  const [name, setName] = useState(user.name);
+  const [age, setAge] = useState(String(user.age));
+  const [confirm, setConfirm] = useState(false);
+  const saveProfile = () => {
+    const n = name.trim(); const a = parseInt(age, 10);
+    if (!n || n.length > 30) return notify('Geçerli bir ad gir.');
+    if (!a || a < 5 || a > 120) return notify('Geçerli bir yaş gir (5–120).');
+    setUser({ name: n, age: a }); notify('Profil güncellendi ✔');
+  };
+  const Section = ({ title, children }) => (
+    <section className="rounded-2xl border border-line bg-panel p-4 sm:p-5">
+      <h2 className="text-xs font-mono uppercase tracking-widest text-neon mb-3">{title}</h2>{children}
+    </section>
+  );
+  return (
+    <motion.div className="fixed inset-0 z-[70] bg-bg overflow-y-auto scroll" initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'tween', duration: .28 }}>
+      <div className="sticky top-0 z-10 glass border-b border-line">
+        <div className="max-w-2xl mx-auto flex items-center gap-3 px-4 py-3">
+          <button onClick={onClose} className="p-2 -ml-2 rounded-lg hover:bg-panel2" aria-label="Geri"><I.back /></button>
+          <h1 className="font-bold text-lg">Ayarlar</h1>
+        </div>
+      </div>
+      <div className="max-w-2xl mx-auto p-4 space-y-4 pb-16">
+        <div className="rounded-2xl border border-line bg-soft p-4 text-sm leading-relaxed flex gap-3">
+          <I.lock className="shrink-0 text-neon mt-0.5" />
+          <span>Tüm verilerin (ad, yaş, sohbetler, mesaj sayaçları) sadece bu cihazda, tarayıcının localStorage alanında saklanır. Sunucuya gönderilmez. Tarayıcı verilerini temizlersen kalıcı olarak silinir.</span>
+        </div>
+
+        <Section title="Profil">
+          <div className="grid sm:grid-cols-[1fr_120px] gap-3">
+            <label className="block"><span className="text-xs text-mute">Ad</span>
+              <input value={name} onChange={e => setName(e.target.value)} maxLength={30} className="mt-1 w-full rounded-xl bg-bg border border-line px-3.5 py-2.5 outline-none focus:border-neon" /></label>
+            <label className="block"><span className="text-xs text-mute">Yaş</span>
+              <input value={age} onChange={e => setAge(e.target.value.replace(/\D/g, '').slice(0, 3))} inputMode="numeric" className="mt-1 w-full rounded-xl bg-bg border border-line px-3.5 py-2.5 outline-none focus:border-neon" /></label>
+          </div>
+          <p className="text-xs text-mute mt-2">18 yaş altı: samimi ve sade anlatım · 18 yaş üstü: profesyonel / hacker üslubu.</p>
+          <button onClick={saveProfile} className="mt-3 rounded-xl bg-neon text-onneon font-semibold px-5 py-2.5 text-sm">Kaydet</button>
+        </Section>
+
+        <Section title="Görünüm">
+          <div className="flex items-center justify-between">
+            <div><div className="font-medium">Tema</div><div className="text-xs text-mute">Varsayılan: karanlık (hacker)</div></div>
+            <div className="flex rounded-xl border border-line overflow-hidden">
+              {['dark', 'light'].map(t => (
+                <button key={t} onClick={() => setTheme(t)} className={'px-4 py-2 text-sm ' + (theme === t ? 'bg-neon text-onneon font-semibold' : 'bg-bg text-mute')}>{t === 'dark' ? '🌙 Koyu' : '☀️ Açık'}</button>
+              ))}
+            </div>
+          </div>
+        </Section>
+
+        <Section title="Bugünkü kullanım">
+          <div className="space-y-2.5">
+            {MODELS.map(m => {
+              const used = usage.counts[m.id] || 0;
+              return (
+                <div key={m.id}>
+                  <div className="flex justify-between text-sm"><span>{m.icon} {m.name}</span><span className="font-mono text-xs text-mute">{used}/{m.limit}</span></div>
+                  <div className="mt-1 h-1.5 rounded-full bg-line overflow-hidden"><div className="h-full bg-neon rounded-full" style={{ width: Math.min(100, used / m.limit * 100) + '%' }} /></div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-mute mt-3">Sayaçlar her gün gece yarısı sıfırlanır.</p>
+        </Section>
+
+        <Section title="Veri">
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <button onClick={onExport} className="flex items-center justify-center gap-2 rounded-xl border border-line hover:border-neon px-4 py-2.5 text-sm"><I.download size={17} /> Sohbetleri .txt olarak dışa aktar ({chats.length})</button>
+            {!confirm
+              ? <button onClick={() => setConfirm(true)} className="flex items-center justify-center gap-2 rounded-xl border border-danger text-danger hover:bg-[color:var(--soft)] px-4 py-2.5 text-sm"><I.trash size={17} /> Tüm yerel verileri sil</button>
+              : <div className="flex items-center gap-2 rounded-xl border border-danger px-3 py-2 text-sm">
+                  <span className="text-danger">Emin misin? Geri alınamaz.</span>
+                  <button onClick={onClear} className="px-3 py-1 rounded-lg bg-danger text-white font-semibold">Sil</button>
+                  <button onClick={() => setConfirm(false)} className="px-3 py-1 rounded-lg border border-line">Vazgeç</button>
+                </div>}
+          </div>
+        </Section>
+
+        <p className="text-center text-xs text-mute font-mono pt-2">SecureInf AI · Konuşmaların sende kalsın. Yerel, güvenli, iz bırakmaz.</p>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  Message bubble
+ * ------------------------------------------------------------------ */
+function Message({ m, userName, typing, onDone, onTick, onSkip, onEdit, onRetry, onVote, onCopy, editBusy }) {
+  const isUser = m.role === 'user';
+  const model = MODELS.find(x => x.id === m.modelId) || MODELS[2];
+  if (isUser) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-end gap-1">
+        <div className="max-w-[86%] sm:max-w-[75%] rounded-2xl rounded-tr-sm px-4 py-2.5 border text-[15px] leading-relaxed whitespace-pre-wrap break-words"
+          style={{ background: 'var(--soft)', borderColor: 'var(--neon)' }}>{m.content}</div>
+        <div className="flex gap-1">
+          <button className="msg-action" onClick={() => onCopy(m.content)}>Kopyala</button>
+          <button className="msg-action" disabled={editBusy} onClick={() => onEdit(m)}>Düzenle</button>
+        </div>
+      </motion.div>
+    );
+  }
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3 items-start">
+      <div className="shrink-0 w-8 h-8 rounded-full bg-panel border border-line flex items-center justify-center"><Logo size={20} /></div>
+      <div className="min-w-0 max-w-[88%]">
+        <div onClick={typing ? onSkip : undefined} className={'rounded-2xl rounded-tl-sm bg-panel border px-4 py-2.5 break-words ' + (m.error ? 'border-danger' : 'border-line')}>
+          {typing ? <TypeText text={m.content} model={model} onDone={onDone} onTick={onTick} /> : <Markdown text={m.content} />}
+        </div>
+        <div className="mt-1 ml-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-mono text-mute">
+          <span>{model.icon} {model.name}</span>
+          <span>· {new Date(m.ts).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+          {typing && <span className="text-neon">· yanıt geliyor</span>}
+        </div>
+        {!typing && !m.error && <div className="mt-1 ml-1 flex flex-wrap gap-1">
+          <button className="msg-action" onClick={() => onCopy(m.content)}>Kopyala</button>
+          <button className="msg-action" aria-label="Beğen" onClick={() => onVote(m.id, 'up')}>{m.vote === 'up' ? '👍✓' : '👍'}</button>
+          <button className="msg-action" aria-label="Beğenme" onClick={() => onVote(m.id, 'down')}>{m.vote === 'down' ? '👎✓' : '👎'}</button>
+          <button className="msg-action" onClick={() => onRetry(m)}>↻ Yeniden üret</button>
+        </div>}
+        {m.modelId === 'pro-max' && !m.error && !typing && (
+          <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border border-line px-2.5 py-1.5 text-[10.5px] font-mono text-neon bg-soft">
+            {PRO_MAX_STATS.map((s, i) => <Fragment key={i}>{i > 0 && <span className="text-mute">|</span>}<span>{s}</span></Fragment>)}
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ *  App
+ * ------------------------------------------------------------------ */
+function App() {
+  const [user, setUser] = useState(() => load(K.user, null));
+  const [chats, setChats] = useState(() => load(K.chats, []));
+  const [activeId, setActiveId] = useState(() => load(K.active, null));
+  const [modelId, setModelId] = useState(() => load(K.model, 'standard'));
+  const [theme, setTheme] = useState(() => load(K.theme, 'dark'));
+  const [usage, setUsage] = useState(getUsage);
+  const [drawer, setDrawer] = useState(false);
+  const [activePage, setActivePage] = useState('chat');
+  const [settings, setSettings] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [typingId, setTypingId] = useState(null);
+  const [streamingId, setStreamingId] = useState(null);
+  const [searchChats, setSearchChats] = useState('');
+  const [messageSearch, setMessageSearch] = useState('');
+  const [editTarget, setEditTarget] = useState(null);
+  const [editDraft, setEditDraft] = useState('');
+  const abortRef = useRef(null);
+  const [toast, setToast] = useState(null);
+  const [input, setInput] = useState('');
+  const scrollRef = useRef(null);
+  const taRef = useRef(null);
+
+  const chat = chats.find(c => c.id === activeId) || null;
+  const model = MODELS.find(m => m.id === modelId) || MODELS[2];
+  const left = id => { const m = MODELS.find(x => x.id === id); return Math.max(0, m.limit - (usage.counts[id] || 0)); };
+
+  // persistence
+  useEffect(() => { if (user) save(K.user, user); }, [user]);
+  useEffect(() => { save(K.chats, chats); }, [chats]);
+  useEffect(() => { save(K.active, activeId); }, [activeId]);
+  useEffect(() => { save(K.model, modelId); }, [modelId]);
+  useEffect(() => { save(K.theme, theme); document.documentElement.setAttribute('data-theme', theme); const mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.content = theme === 'dark' ? '#0A0A0A' : '#F2F6F4'; }, [theme]);
+
+  // daily reset check
+  useEffect(() => {
+    const refresh = () => setUsage(getUsage());
+    const id = setInterval(refresh, 30000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(id); window.removeEventListener('focus', refresh); };
+  }, []);
+
+  const notify = msg => { setToast(msg); clearTimeout(notify._t); notify._t = setTimeout(() => setToast(null), 2800); };
+  const scrollDown = useCallback(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, []);
+  useEffect(() => { scrollDown(); }, [chat && chat.messages.length, busy, activeId]);
+
+  // textarea autosize
+  useEffect(() => { const t = taRef.current; if (t) { t.style.height = 'auto'; t.style.height = Math.min(140, t.scrollHeight) + 'px'; } }, [input]);
+
+  const send = async (raw, options = {}) => {
+    const text = (raw || '').trim();
+    if (!text || busy || !user) return;
+    if (left(model.id) <= 0 && !options.retry) { notify(`${model.name} için günlük limit doldu. Başka bir SI modeli seç.`); return; }
+    const now = Date.now();
+    const cid = options.chatId || (chat ? chat.id : uid());
+    const currentChat = chats.find(c => c.id === cid) || chat;
+    const prior = options.history || (currentChat ? currentChat.messages : []);
+    const userMsg = options.skipUser ? null : { id: uid(), role: 'user', content: text, ts: now };
+    const messagesBefore = options.replaceFromId
+      ? prior.filter(m => m.id !== options.replaceFromId && m.role !== 'assistant' ? true : m.id !== options.replaceFromId)
+      : prior;
+    const initialMessages = userMsg ? [...messagesBefore, userMsg] : messagesBefore;
+    if (!currentChat) {
+      const nc = { id: cid, title: text.length > 38 ? text.slice(0, 38) + '…' : text, created: now, updated: now, pinned: false, folder: '', messages: initialMessages };
+      setChats(p => [nc, ...p]);
+      setActiveId(cid);
+    } else {
+      setChats(p => p.map(c => c.id === cid ? { ...c, updated: now, messages: initialMessages } : c));
+      setActiveId(cid);
+    }
+    setInput('');
+    setBusy(true);
+    setTypingId(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const aiId = uid();
+    setStreamingId(aiId);
+    setChats(p => p.map(c => c.id === cid ? { ...c, messages: [...c.messages, { id: aiId, role: 'assistant', content: '', ts: Date.now(), modelId: model.id, streaming: true }] } : c));
+    const system = buildSystem(user, model);
+    const history = initialMessages.slice(-12).map(x => ({ role: x.role, content: x.content }));
+    let ok = true, stopped = false, reply = '';
+    try {
+      reply = await callAI(text, {
+        system, history: options.skipUser ? history.slice(0, -1) : history.slice(0, -1),
+        model, user, signal: controller.signal,
+        onChunk: full => {
+          setChats(p => p.map(c => c.id === cid ? { ...c, messages: c.messages.map(m => m.id === aiId ? { ...m, content: full, streaming: true } : m) } : c));
+          scrollDown();
+        }
+      });
+      if (!reply.trim()) throw new Error('Boş yanıt alındı.');
+    } catch (e) {
+      if (e?.name === 'AbortError' || controller.signal.aborted) {
+        stopped = true;
+        reply = reply || 'Yanıt durduruldu.';
+      } else {
+        ok = false;
+        reply = (reply ? reply + '\n\n' : '') + '⚠️ ' + (e.message || 'Bağlantı kurulamadı. Groq API ayarlarını kontrol et.');
+      }
+    }
+    setChats(p => p.map(c => c.id === cid ? { ...c, updated: Date.now(), messages: c.messages.map(m => m.id === aiId ? { ...m, content: reply, streaming: false, stopped, error: !ok } : m) } : c));
+    if (ok && !stopped) {
+      const u = getUsage(); u.counts[model.id] = (u.counts[model.id] || 0) + 1; save(K.usage, u); setUsage({ ...u, counts: { ...u.counts } });
+    }
+    if (!currentChat && !options.titleAlreadySet) {
+      generateChatTitle(text, { system: 'Yalnızca kısa bir başlık üret.', signal: undefined }).then(title => {
+        setChats(p => p.map(c => c.id === cid ? { ...c, title } : c));
+      });
+    }
+    setStreamingId(null);
+    setBusy(false);
+    setTypingId(null);
+    abortRef.current = null;
+  };
+
+  const stopGeneration = () => {
+    if (abortRef.current) { abortRef.current.abort(); notify('Yanıt durduruluyor…'); }
+  };
+
+  const copyText = async text => {
+    try { await navigator.clipboard.writeText(text); notify('Kopyalandı ✔'); }
+    catch { notify('Kopyalama desteklenmiyor.'); }
+  };
+
+  const voteMessage = (messageId, vote) => {
+    setChats(p => p.map(c => c.id === activeId ? { ...c, messages: c.messages.map(m => m.id === messageId ? { ...m, vote: m.vote === vote ? null : vote } : m) } : c));
+  };
+
+  const editMessage = m => { setEditTarget(m); setEditDraft(m.content); };
+  const saveEdit = () => {
+    if (!editTarget || !editDraft.trim() || busy) return;
+    const idx = msgs.findIndex(m => m.id === editTarget.id);
+    const history = msgs.slice(0, idx);
+    const cid = activeId;
+    setChats(p => p.map(c => c.id === cid ? { ...c, messages: history } : c));
+    const edited = editDraft.trim();
+    setEditTarget(null);
+    setEditDraft('');
+    send(edited, { chatId: cid, history, replaceFromId: editTarget.id });
+  };
+
+  const retryMessage = m => {
+    if (busy) return;
+    const idx = msgs.findIndex(x => x.id === m.id);
+    const prior = msgs.slice(0, idx);
+    const lastUser = [...prior].reverse().find(x => x.role === 'user');
+    if (!lastUser) return notify('Yeniden üretilecek kullanıcı mesajı bulunamadı.');
+    setChats(p => p.map(c => c.id === activeId ? { ...c, messages: prior } : c));
+    send(lastUser.content, { chatId: activeId, history: prior, skipUser: true, retry: true });
+  };
+
+  const renameChat = c => {
+    const title = window.prompt('Yeni sohbet adı:', c.title);
+    if (title && title.trim()) setChats(p => p.map(x => x.id === c.id ? { ...x, title: title.trim().slice(0, 70) } : x));
+  };
+  const togglePin = (c, e) => {
+    e.stopPropagation();
+    setChats(p => p.map(x => x.id === c.id ? { ...x, pinned: !x.pinned } : x));
+  };
+  const setFolder = (c, e) => {
+    e.stopPropagation();
+    const folder = window.prompt('Klasör adı (boş bırak: klasörden çıkar):', c.folder || '');
+    if (folder !== null) setChats(p => p.map(x => x.id === c.id ? { ...x, folder: folder.trim().slice(0, 40) } : x));
+  };
+
+  const newChat = () => { setActivePage('chat'); setActiveId(null); setDrawer(false); setTypingId(null); setTimeout(() => taRef.current && taRef.current.focus(), 50); };
+  const delChat = (id, e) => { e.stopPropagation(); setChats(p => p.filter(c => c.id !== id)); if (id === activeId) setActiveId(null); notify('Sohbet silindi'); };
+
+  const exportChats = () => {
+    if (!chats.length) return notify('Dışa aktarılacak sohbet yok.');
+    const out = ['SecureInf AI — Sohbet Dışa Aktarımı', `Kullanıcı: ${user.name}`, `Tarih: ${new Date().toLocaleString('tr-TR')}`, 'Veriler yalnızca bu cihazdan dışa aktarıldı.', ''];
+    [...chats].sort((a, b) => a.created - b.created).forEach(c => {
+      out.push('='.repeat(60), `# ${c.title}`, `Başlangıç: ${new Date(c.created).toLocaleString('tr-TR')}`, '='.repeat(60));
+      c.messages.forEach(m => {
+        const who = m.role === 'user' ? user.name : ('SecureInf' + (m.modelId ? ` (${(MODELS.find(x => x.id === m.modelId) || {}).name})` : ''));
+        out.push(`[${new Date(m.ts).toLocaleTimeString('tr-TR')}] ${who}:`, m.content, '');
+      });
+    });
+    const blob = new Blob([out.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `secureinf-sohbetler-${todayKey()}.txt`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    notify('Dışa aktarıldı ✔');
+  };
+
+  const clearAll = () => {
+    if (abortRef.current) abortRef.current.abort();
+    Object.values(K).forEach(k => { try { localStorage.removeItem(k); } catch {} });
+    setSettings(false); setChats([]); setActiveId(null); setUser(null); setModelId('standard'); setTheme('dark'); setUsage(getUsage()); setTypingId(null);
+    notify('Tüm yerel veriler silindi.');
+  };
+
+  const sortedChats = [...chats]
+    .filter(c => !searchChats.trim() || c.title.toLowerCase().includes(searchChats.toLowerCase()) || c.messages.some(m => m.content.toLowerCase().includes(searchChats.toLowerCase())))
+    .sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || b.updated - a.updated);
+  const keyDown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } };
+  const allMsgs = chat ? chat.messages : [];
+  const msgs = messageSearch.trim()
+    ? allMsgs.filter(m => m.content.toLowerCase().includes(messageSearch.toLowerCase()))
+    : allMsgs;
+
+  return (
+    <div className="relative h-full">
+      <MatrixBg theme={theme} />
+
+      {!user && <Onboarding onDone={u => setUser(u)} />}
+
+      {user && (
+        <div className="relative z-10 h-full flex" style={{ height: '100dvh' }}>
+          {/* mobile overlay */}
+          <AnimatePresence>
+            {drawer && <motion.div className="fixed inset-0 z-30 bg-black/60 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDrawer(false)} />}
+          </AnimatePresence>
+
+          {/* sidebar / drawer */}
+          <aside className={'fixed lg:static inset-y-0 left-0 z-40 w-[290px] max-w-[85vw] flex flex-col glass border-r border-line transition-transform duration-300 ' + (drawer ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')}>
+            <div className="flex items-center gap-2.5 px-4 pt-4 pb-3">
+              <Logo size={30} />
+              <div className="leading-tight"><div className="font-bold tracking-tight">SecureInf <span className="text-neon">AI</span></div><div className="text-[10px] font-mono text-mute">local · secure · no trace</div></div>
+              <button onClick={() => setDrawer(false)} className="ml-auto p-1.5 rounded-lg hover:bg-panel2 lg:hidden" aria-label="Kapat"><I.x size={18} /></button>
+            </div>
+            <div className="px-3 pb-2">
+              <motion.button whileTap={{ scale: .97 }} onClick={newChat} className="w-full flex items-center justify-center gap-2 rounded-xl bg-neon text-onneon font-semibold py-2.5 text-sm glow"><I.plus size={17} /> Yeni sohbet</motion.button>
+            </div>
+            <nav aria-label="Ana menü" className="px-3 pb-3 space-y-1">
+              <button onClick={() => { setActivePage('chat'); setDrawer(false); }} className={'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-left border ' + (activePage === 'chat' ? 'bg-soft border-line text-neon' : 'border-transparent hover:bg-panel2 text-ink')}>
+                <span>💬</span><span>Sohbetler</span>
+              </button>
+              <button onClick={() => { setActivePage('reviews'); setDrawer(false); }} className={'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-left border ' + (activePage === 'reviews' ? 'bg-soft border-line text-neon' : 'border-transparent hover:bg-panel2 text-ink')}>
+                <span>⭐</span><span>Değerlendirmeler</span>
+              </button>
+              <button onClick={() => { setActivePage('help'); setDrawer(false); }} className={'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-left border ' + (activePage === 'help' ? 'bg-soft border-line text-neon' : 'border-transparent hover:bg-panel2 text-ink')}>
+                <span>❔</span><span>Yardım</span>
+              </button>
+            </nav>
+            {activePage === 'chat' && <>
+            <div className="px-3 pt-2 pb-2 space-y-2">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-mute">Sohbet geçmişi</div>
+              <input className="sidebar-input" value={searchChats} onChange={e => setSearchChats(e.target.value)} placeholder="Sohbetlerde ara..." aria-label="Sohbet geçmişinde ara" />
+            </div>
+            <div className="flex-1 overflow-y-auto scroll px-2 pb-2">
+              {sortedChats.length === 0 && <div className="px-3 py-6 text-center text-xs text-mute font-mono">Henüz sohbet yok.<br />İlk mesajını gönder.</div>}
+              <AnimatePresence initial={false}>
+                {sortedChats.map(c => (
+                  <motion.div key={c.id} layout initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                    onClick={() => { setActiveId(c.id); setActivePage('chat'); setDrawer(false); setTypingId(null); }}
+                    className={'group flex items-center gap-2 rounded-xl px-3 py-2.5 cursor-pointer text-sm mb-0.5 border ' + (c.id === activeId ? 'bg-soft border-line' : 'border-transparent hover:bg-panel2')}>
+                    <span className={'w-1.5 h-1.5 rounded-full shrink-0 ' + (c.id === activeId ? 'bg-neon' : 'bg-line')} />
+                    <span className="flex-1 min-w-0">
+                      <span className="block truncate">{c.pinned ? '📌 ' : ''}{c.title}</span>
+                      {c.folder && <span className="block text-[10px] text-neon truncate">{c.folder}</span>}
+                    </span>
+                    <button onClick={e => { e.stopPropagation(); renameChat(c); }} title="Yeniden adlandır" className="p-1 rounded-md text-mute hover:text-neon"><span aria-hidden="true">✎</span></button>
+                    <button onClick={e => togglePin(c, e)} title={c.pinned ? 'Sabitlemeyi kaldır' : 'Sabitle'} className="p-1 rounded-md text-mute hover:text-neon">{c.pinned ? '📌' : '⌖'}</button>
+                    <button onClick={e => setFolder(c, e)} title="Klasör" className="p-1 rounded-md text-mute hover:text-neon">▣</button>
+                    <button onClick={e => delChat(c.id, e)} aria-label="Sohbeti sil" className="p-1 rounded-md text-mute hover:text-danger"><I.trash size={15} /></button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            </>}
+            <div className="border-t border-line p-3 space-y-2">
+              <div className="flex items-center gap-2 text-[11px] text-mute font-mono"><I.lock size={13} className="text-neon" /> Veriler yalnızca bu cihazda</div>
+              <button onClick={() => { setSettings(true); setDrawer(false); }} className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-panel2 text-left">
+                <span className="w-8 h-8 rounded-full bg-soft border border-line text-neon font-bold flex items-center justify-center">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="flex-1 min-w-0"><span className="block text-sm font-medium truncate">{user.name}</span><span className="block text-[11px] text-mute">{user.age} yaş · ayarlar</span></span>
+                <I.gear size={18} className="text-mute" />
+              </button>
+            </div>
+          </aside>
+
+          {/* main */}
+          <main className="flex-1 min-w-0 flex flex-col h-full">
+            <header className="glass border-b border-line px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-3 relative z-20" style={{ paddingTop: 'max(10px, env(safe-area-inset-top))' }}>
+              <button onClick={() => setDrawer(true)} className="p-2 -ml-1 rounded-lg hover:bg-panel2 lg:hidden" aria-label="Menü"><I.menu /></button>
+              <div className="flex items-center gap-2">
+                <Logo size={28} />
+                <span className="font-bold tracking-tight">{activePage === 'chat' ? <>SecureInf <span className="text-neon">AI</span></> : activePage === 'reviews' ? 'Değerlendirmeler' : 'Yardım'}</span>
+              </div>
+              {activePage === 'chat' && <div className="ml-auto"><ModelPicker modelId={modelId} setModelId={setModelId} usage={usage} /></div>}
+            </header>
+
+            {activePage === 'chat' && <div className="px-3 pt-2">
+              {allMsgs.length > 0 && <input className="sidebar-input max-w-3xl block mx-auto" value={messageSearch} onChange={e => setMessageSearch(e.target.value)} placeholder="Bu sohbetin mesajlarında ara..." aria-label="Bu sohbette ara" />}
+            </div>}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto scroll">
+              {activePage === 'reviews' ? (
+                <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
+                  <div className="text-[11px] font-mono tracking-[.22em] uppercase text-neon mb-2">SecureInf / Topluluk</div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Değerlendirmeler</h1>
+                  <p className="text-sm text-mute mb-6">Kullanıcı değerlendirmeleri ve puanları.</p>
+                  <article className="rounded-2xl border border-line bg-panel p-5 sm:p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 shrink-0 rounded-2xl border border-neon/40 bg-soft flex items-center justify-center text-neon text-xl font-bold">E</div>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="font-semibold text-lg">Efsa</h2>
+                        <p className="text-sm text-mute mt-1">Cinsiyet: Kız</p>
+                        <div className="flex flex-wrap items-center gap-1 mt-3" aria-label="10 yıldız">
+                          {Array.from({ length: 10 }, (_, i) => <span key={i} className="text-amber-400 text-xl leading-none" aria-hidden="true">★</span>)}
+                          <span className="text-xs text-mute ml-2">10 yıldız</span>
+                        </div>
+                        <div className="mt-4 rounded-xl border border-line bg-bg/70 p-3 text-sm text-mute">Değerlendirme yok</div>
+                      </div>
+                    </div>
+                  </article>
+                </section>
+              ) : activePage === 'help' ? (
+                <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
+                  <div className="text-[11px] font-mono tracking-[.22em] uppercase text-neon mb-2">SecureInf / Destek</div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Yardım ve İletişim</h1>
+                  <p className="text-sm text-mute mb-6">Soruların veya bildirmek istediğin bir sorun için aşağıdaki iletişim kanallarını kullanabilirsin.</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <a href="https://wa.me/905314357945" target="_blank" rel="noreferrer" className="group rounded-2xl border border-line bg-panel p-5 hover:border-neon transition-colors">
+                      <div className="flex items-center gap-3 mb-4"><span className="w-11 h-11 flex items-center justify-center rounded-xl bg-soft text-xl">☏</span><span className="font-semibold">WhatsApp</span></div>
+                      <div className="font-mono text-sm group-hover:text-neon transition-colors">531 435 79 45</div>
+                      <p className="mt-2 text-xs text-mute">WhatsApp üzerinden iletişime geç</p>
+                    </a>
+                    <a href="mailto:melih.cigdem.tt@gmail.com" className="group rounded-2xl border border-line bg-panel p-5 hover:border-neon transition-colors">
+                      <div className="flex items-center gap-3 mb-4"><span className="w-11 h-11 flex items-center justify-center rounded-xl bg-soft text-xl">✉</span><span className="font-semibold">E-posta</span></div>
+                      <div className="break-all text-sm group-hover:text-neon transition-colors">melih.cigdem.tt@gmail.com</div>
+                      <p className="mt-2 text-xs text-mute">E-posta gönder</p>
+                    </a>
+                  </div>
+                </section>
+              ) : (msgs.length === 0 && !busy ? (
+                <Terminal name={user.name} onPick={s => send(s)} />
+              ) : (
+                <div className="max-w-3xl mx-auto px-3 sm:px-4 py-5 space-y-5">
+                  {msgs.map(m => (
+                    <Message key={m.id} m={m} userName={user.name}
+                      typing={m.id === typingId}
+                      onDone={() => setTypingId(null)} onTick={scrollDown} onSkip={() => setTypingId(null)}
+                      onEdit={editMessage} onRetry={retryMessage} onVote={voteMessage} onCopy={copyText} editBusy={busy} />
+                  ))}
+                  {busy && <Thinking model={model} />}
+                  <div className="h-2" />
+                </div>
+              ))}
+            </div>
+
+            {activePage === 'chat' && <div className="glass border-t border-line px-3 sm:px-4 pt-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              <div className="max-w-3xl mx-auto">
+                <div className="flex items-end gap-2 rounded-2xl border border-line bg-panel focus-within:border-neon transition-colors p-1.5">
+                  <button onClick={() => setSettings(true)} aria-label="Ayarlar" className="p-2.5 rounded-xl text-mute hover:text-neon hover:bg-panel2 transition-colors"><I.gear size={20} /></button>
+                  <textarea ref={taRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={keyDown} rows={1}
+                    placeholder={`Mesajını yaz, ${user.name}...`}
+                    className="flex-1 bg-transparent outline-none resize-none py-2.5 text-[15px] placeholder:text-mute max-h-[140px]" />
+                  {busy
+                    ? <button onClick={stopGeneration} aria-label="Yanıtı durdur" className="p-2.5 rounded-xl border border-danger text-danger">■</button>
+                    : <motion.button whileTap={{ scale: .9 }} onClick={() => send(input)} disabled={!input.trim()} aria-label="Gönder"
+                      className="p-2.5 rounded-xl bg-neon text-onneon disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"><I.send size={20} /></motion.button>}
+                </div>
+                <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] font-mono text-mute">
+                  <span>{model.icon} {model.name} · kalan {left(model.id)}/{model.limit}</span>
+                  <span className="hidden sm:inline">Enter: gönder · Shift+Enter: yeni satır</span>
+                  <span className="sm:hidden">🔒 yerel</span>
+                </div>
+              </div>
+            </div>}
+          </main>
+        </div>
+      )}
+
+      {editTarget && <div className="fixed inset-0 z-[90] bg-black/70 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg rounded-2xl border border-line bg-panel p-4">
+          <div className="font-semibold mb-3">Mesajı düzenle</div>
+          <textarea value={editDraft} onChange={e => setEditDraft(e.target.value)} rows={5} className="w-full rounded-xl bg-bg border border-line p-3 outline-none focus:border-neon resize-y" />
+          <div className="flex justify-end gap-2 mt-3">
+            <button className="msg-action" onClick={() => { setEditTarget(null); setEditDraft(''); }}>Vazgeç</button>
+            <button className="rounded-xl bg-neon text-onneon font-semibold px-4 py-2 text-sm" onClick={saveEdit}>Düzenle ve gönder</button>
+          </div>
+        </div>
+      </div>}
+
+      <AnimatePresence>
+        {user && settings && (
+          <Settings key="settings" user={user} setUser={setUser} theme={theme} setTheme={setTheme} usage={usage} chats={chats}
+            onExport={exportChats} onClear={clearAll} onClose={() => setSettings(false)} notify={notify} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div key={toast} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+            className="fixed left-1/2 bottom-24 z-[120] -translate-x-1/2 max-w-[90vw] rounded-xl bg-panel border border-neon px-4 py-2.5 text-sm font-mono glow" style={{ transform: 'translateX(-50%)' }}>
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
