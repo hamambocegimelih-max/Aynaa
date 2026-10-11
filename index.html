@@ -120,11 +120,11 @@ const AnimatePresence = FM.AnimatePresence || (({ children }) => React.createEle
  *  ctx = { system, history: [{role, content}], signal, onChunk }
  *  Dönen değer: asistan yanıtının tamamı (string). Akış sırasında onChunk(tamMetin) çağrılır.
  * ------------------------------------------------------------------ */
+const GROQ_API_KEY = 'BURAYA_YENI_GROQ_ANAHTARINI_YAPISTIR'; // gsk_... ile başlar
 const API_ENDPOINTS = [
-  'https://text.pollinations.ai/openai',
-  'https://gen.pollinations.ai/v1/chat/completions'
+  'https://api.groq.com/openai/v1/chat/completions'
 ];
-const API_MODEL = 'openai';
+const API_MODEL = 'llama-3.3-70b-versatile';
 
 function apiError(status, detail) {
   const e = new Error(status === 429
@@ -137,7 +137,7 @@ function apiError(status, detail) {
 async function requestOnce(url, messages, ctx) {
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
     body: JSON.stringify({ model: API_MODEL, messages, stream: true }),
     signal: ctx.signal
   });
