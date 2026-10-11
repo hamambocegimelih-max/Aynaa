@@ -124,7 +124,30 @@ const GROQ_API_KEY = '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';
 const API_ENDPOINTS = [
   'https://api.groq.com/openai/v1/chat/completions'
 ];
-const API_MODEL = 'llama-3.3-70b-versatile';
+// Tercih sırası (en yeni/güçlü -> en yüksek limitli). Hesabında olmayanlar otomatik atlanır.
+const MODEL_PREFS = [
+  'openai/gpt-oss-120b',
+  'llama-3.3-70b-versatile',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+  'qwen/qwen3-32b',
+  'openai/gpt-oss-20b',
+  'llama-3.1-8b-instant'
+];
+const SKIP_MODEL = /whisper|tts|guard|orpheus|playai|embed|compound|safeguard/i;
+let _modelList = null;
+async function getModelList() {
+  if (_modelList) return _modelList;
+  let available = [];
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { 'Authorization': 'Bearer ' + GROQ_API_KEY } });
+    if (r.status === 401) throw apiError(401, 'Geçersiz API anahtarı');
+    if (r.ok) { const j = await r.json(); available = (j.data || []).map(m => m.id).filter(id => !SKIP_MODEL.test(id)); }
+  } catch (e) { if (e && e.status === 401) throw e; }
+  const ordered = MODEL_PREFS.filter(id => available.includes(id));
+  const rest = available.filter(id => !ordered.includes(id));
+  _modelList = (available.length ? [...ordered, ...rest] : MODEL_PREFS);
+  return _modelList;
+}
 
 function apiError(status, detail) {
   const e = new Error(status === 429
@@ -134,11 +157,11 @@ function apiError(status, detail) {
   return e;
 }
 
-async function requestOnce(url, messages, ctx) {
+async function requestOnce(url, model, messages, ctx) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
-    body: JSON.stringify({ model: API_MODEL, messages, stream: true }),
+    body: JSON.stringify({ model, messages, stream: true }),
     signal: ctx.signal
   });
   if (!res.ok) {
@@ -197,16 +220,19 @@ async function callAI(prompt, ctx = {}) {
     { role: 'user', content: prompt }
   ];
   let lastErr = null;
-  for (const url of API_ENDPOINTS) {
+  const models = await getModelList();
+  for (const model of models) {
     try {
-      const text = await requestOnce(url, messages, ctx);
+      const text = await requestOnce(API_ENDPOINTS[0], model, messages, ctx);
       if (text && text.trim()) return text;
       lastErr = new Error('Boş yanıt alındı.');
     } catch (e) {
       if ((e && e.name === 'AbortError') || (ctx.signal && ctx.signal.aborted)) throw e;
+      if (e && e.status === 401) throw e; // anahtar hatası: diğer modeller de çalışmaz
       lastErr = (e instanceof TypeError)
         ? new Error('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.')
         : e;
+      // 404 / 400 / 429 / 5xx: sıradaki modeli dene
     }
   }
   throw lastErr || new Error('Bağlantı kurulamadı.');
